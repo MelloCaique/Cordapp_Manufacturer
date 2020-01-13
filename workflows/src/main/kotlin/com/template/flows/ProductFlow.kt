@@ -1,14 +1,13 @@
 package com.template.flows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.template.contracts.CarContract
-import com.template.states.CarState
+import com.template.contracts.ProductContract
+import com.template.states.ProductState
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.requireThat
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 
@@ -16,7 +15,7 @@ import net.corda.core.transactions.TransactionBuilder
 @StartableByRPC
 class CarIssueInitiator(
         val buyer: Party,
-        val seller: Party,
+        val bank: Party,
         val manufacturer: Party,
         val vin: String,
         val licensePlateNumber: String,
@@ -28,10 +27,10 @@ class CarIssueInitiator(
     override fun call(): SignedTransaction {
 
         val notary = serviceHub.networkMapCache.notaryIdentities.first()
-        val command = Command(CarContract.Commands.Issue(), listOf(buyer, seller, manufacturer).map { it.owningKey })
-        val carState = CarState(
+        val command = Command(ProductContract.Commands.Issue(), listOf(buyer, bank, manufacturer).map { it.owningKey })
+        val carState = ProductState(
                 buyer,
-                seller,
+                bank,
                 manufacturer,
                 vin,
                 licensePlateNumber,
@@ -42,7 +41,7 @@ class CarIssueInitiator(
         )
 
         val txBuilder = TransactionBuilder(notary)
-                .addOutputState(carState, CarContract.ID)
+                .addOutputState(carState, ProductContract.ID)
                 .addCommand(command)
 
         txBuilder.verify(serviceHub)
@@ -62,7 +61,7 @@ class CarIssueResponder(val counterpartySession: FlowSession) : FlowLogic<Signed
         val signedTransactionFlow = object : SignTransactionFlow(counterpartySession) {
             override fun checkTransaction(stx: SignedTransaction) = requireThat {
                 val output = stx.tx.outputs.single().data
-                "The output must be a CarState" using (output is CarState)
+                "The output must be a CarState" using (output is ProductState)
             }
         }
         val txWeJustSignedId = subFlow(signedTransactionFlow)

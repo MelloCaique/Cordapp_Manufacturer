@@ -1,7 +1,6 @@
 package com.template.states
 
-import com.template.contracts.CarContract
-import com.template.contracts.TemplateContract
+import com.template.contracts.ProductContract
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.UniqueIdentifier
@@ -12,10 +11,10 @@ import net.corda.core.identity.Party
 // * State *
 // *********
 
-@BelongsToContract(CarContract::class)
-data class CarState(
+@BelongsToContract(ProductContract::class)
+data class ProductState(
         val buyer: Party,
-        val seller: Party,
+        val bank: Party,
         val manufacturer: Party,
         val vin: String,
         val licensePlateNumber: String,
@@ -24,5 +23,5 @@ data class CarState(
         val dealershipLocation: String,
         val linearId: UniqueIdentifier
 ) : ContractState {
-    override val participants: List<AbstractParty> = listOf(buyer, seller, manufacturer)
+    override val participants: List<AbstractParty> = listOf(buyer, bank, manufacturer)
 }
